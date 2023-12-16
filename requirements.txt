@@ -1,1 +1,4 @@
-pkg_resources==0.0.0
+certifi==2023.11.17
+elastic-transport==8.10.0
+elasticsearch==8.11.1
+urllib3==2.1.0
