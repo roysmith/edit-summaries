@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from elasticsearch import Elasticsearch
+from opensearchpy import OpenSearch
 
 
 def main():
-    es = Elasticsearch(['elasticsearch.svc.tools.eqiad1.wikimedia.cloud:80'])
+    es = OpenSearch(['http://elasticsearch.svc.tools.eqiad1.wikimedia.cloud:80'])
     print(es.info())
 
     
