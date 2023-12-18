@@ -4,7 +4,7 @@ from opensearchpy import OpenSearch
 
 
 def main():
-    es = OpenSearch(['http://elasticsearch.svc.tools.eqiad1.wikimedia.cloud:80'])
+    es = OpenSearch(['http://localhost:9200'])
     print(es.info())
 
     
