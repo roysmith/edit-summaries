@@ -2,10 +2,16 @@
 
 from opensearchpy import OpenSearch
 
+host = 'opensearch:9200'
+auth = ('admin', 'admin')
 
 def main():
-    es = OpenSearch(['http://localhost:9200'])
-    print(es.info())
+    server = OpenSearch(hosts = [host],
+                        http_auth = auth,
+                        use_ssl = False,
+                        #verify_certs = True,
+                        )
+    print(server.info())
 
     
 if __name__ == '__main__':
