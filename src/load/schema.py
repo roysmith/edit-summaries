@@ -170,8 +170,14 @@ class Row:
 def build_row(tsv_string):
     """Build a Row from a tsv records string.
 
-    Missing scalar fields in the input record are represented as None.  Missing
-    string-array fields are represented as empty lists.
+    Missing scalar fields in the input record are represented as None.
+    Missing string-array fields are represented as empty lists.
+
+    Early versions of the Mediawiki software stored empty revision
+    comments as '*' in the database; this is preserved in the
+    denomalized history files.  It's not clear how this should be
+    handled by build_row().  For now we preserve the '*' in
+    Row.event_comment, but that may change in the future.
 
     """
     fields = tsv_string.split('\t')
