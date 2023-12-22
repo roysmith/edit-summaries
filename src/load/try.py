@@ -4,26 +4,21 @@ import bz2
 from collections import namedtuple
 from pathlib import Path
 
-import pandas as pd
+import schema
 
-from schema import DATA_SCHEMA
+DUMP_DIR = "/public/dumps/public/other/mediawiki_history"
+DATE = "2023-11"
+WIKI = "enwiki"
 
-DataRow = namedtuple('DataRow', DATA_SCHEMA)
 
 def main():
-    DUMP_DIR = "/public/dumps/public/other/mediawiki_history"
-    DATE = "2023-11"
-    WIKI = "enwiki"
-    # for schema and how to interpret fields, see: 
-    # https://wikitech.wikimedia.org/wiki/Analytics/Data_Lake/Edits/Mediawiki_history_dumps#Technical_Documentation
-
     wiki_dir = Path(DUMP_DIR) / DATE / WIKI
     filenames = sorted(wiki_dir.glob('*.tsv.bz2'))
     filenames = filenames[-1:]
     for filename in filenames:
         for row in get_rows(filename):
-            if row.event_entity == 'revision':
-                summary = get_human_text(row.event_comment_escaped)
+            if row.event_entity == 'revision' and row.event_comment and not row.event_user_is_bot_by:
+                summary = get_human_text(row.event_comment)
                 if summary:
                     print(summary)
         break
@@ -31,7 +26,7 @@ def main():
 def get_rows(file_name):
     with bz2.open(file_name, 'rt') as f:
         for line in f:
-            yield DataRow(*line.split('\t'))
+            yield schema.build_row(line)
 
 def get_human_text(text):
     if text == '*':
