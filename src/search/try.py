@@ -7,8 +7,8 @@ auth = ('admin', 'admin')
 
 def main():
     server = OpenSearch(hosts = [host],
-                        http_auth = auth,
                         use_ssl = False,
+                        # http_auth = auth,
                         #verify_certs = True,
                         )
     print(server.info())
