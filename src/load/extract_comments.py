@@ -6,23 +6,17 @@ Extract edit comments.
 """
 
 
+import argparse
 import bz2
 from pathlib import Path
 
 import schema
 
-
-DUMP_DIR = "/public/dumps/public/other/mediawiki_history"
-DATE = "2023-11"
-WIKI = "enwiki"
-
-
 def main():
-    wiki_dir = Path(DUMP_DIR) / DATE / WIKI
-    filenames = sorted(wiki_dir.glob('*.tsv.bz2'))
-    filenames = filenames[-1:]
-    for filename in filenames:
-        for row in get_rows(filename):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    for row in get_rows(args.filename):
             if row.event_entity == 'revision' and row.event_comment and not row.event_user_is_bot_by:
                 summary = get_human_text(row.event_comment)
                 if summary:
