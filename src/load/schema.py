@@ -226,3 +226,10 @@ def expand_string_array(input_string):
         return []
     strings = re.split(r'(?<!\\),', input_string)
     return [unescape_tnr_comma(s) for s in strings]
+
+
+def escape_tnr(s):
+    r"""Inverse of unescape_tnr()
+
+    """
+    return s.replace('\t', '\\t').replace('\n', '\\n').replace('\r', '\\r')

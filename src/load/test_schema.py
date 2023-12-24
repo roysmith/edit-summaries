@@ -1,6 +1,6 @@
 import pytest
 
-from schema import Row, build_row, unescape_tnr, unescape_tnr_comma
+from schema import Row, build_row, unescape_tnr, unescape_tnr_comma, escape_tnr
 
 
 ROW_1 = r'enwiki	revision	create	2001-01-15 19:27:13.0	*	11313587	Office.bomis.com	Office.bomis.com							false	false	true	false	2009-12-28 09:06:07.0	2009-12-28 09:06:09.0	2001-01-15 19:27:13.0	1		26323569	HomePage	HomePage	0	true	0	true	true	false	2010-02-24 14:25:49.0	2001-01-15 19:27:13.0	1																		908493298	0	false		false	26	26	hjnc5wxv75ckwvos9wsd0as31nmnice			false		false			false	true	'
@@ -94,6 +94,19 @@ ROW_3 = r'enwiki	user	alterblocks	2023-11-04 21:10:24.0																									
 ])
 def test_unescape_tnr(input, expected):
     assert unescape_tnr(input) == expected
+
+
+@pytest.mark.parametrize('input,expected', [
+    ('', ''),
+    ('foo bar', 'foo bar'),
+    ('foo\tbar', 'foo\\tbar'),
+    ('foo\tbar\nbaz\r', 'foo\\tbar\\nbaz\\r'),
+    ('foo\\x', 'foo\\x'),
+    ('foo,bar','foo,bar'),
+    ('foo\\,bar', 'foo\\,bar'),
+])
+def test_escape_tnr(input, expected):
+    assert escape_tnr(input) == expected
 
 
 @pytest.mark.parametrize('input,expected', [
