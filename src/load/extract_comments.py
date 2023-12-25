@@ -9,6 +9,7 @@ Extract edit comments.
 import argparse
 import bz2
 from collections import namedtuple
+import json
 from pathlib import Path
 
 import schema
@@ -20,7 +21,7 @@ def main():
     parser.add_argument('filename',
                         help='input file (must be in tsv-bz2 format)')
     parser.add_argument('--tuple',
-                        default=False,
+                        default=True,
                         action=argparse.BooleanOptionalAction,
                         help='Use the high-speed NamedTuple parsing strategy')
     args = parser.parse_args()
@@ -36,9 +37,13 @@ def process_as_tuples(filename):
         if row.event_entity == 'revision':
             comment = schema.unescape_tnr(row.event_comment_escaped)
             if comment and not row.event_user_is_bot_by_string:
-                summary = get_human_text(comment)
-                if summary:
-                    print(schema.escape_tnr(summary))
+                human_comment = get_human_text(comment)
+                if human_comment:
+                    data = {'timestamp': row.event_timestamp,
+                            'comment': human_comment,
+                            'username': schema.unescape_tnr(row.event_user_text_escaped),
+                            }
+                    print(json.dumps(data))
 
 
 def get_tuples(filename):
