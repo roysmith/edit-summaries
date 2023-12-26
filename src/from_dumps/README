@@ -1,0 +1,3 @@
+This directory contains some historical code which reads directly from
+the files described in [[wikitech:Dumps/SQL-XML_Dumps]].  This is all
+effectively obsolete.
