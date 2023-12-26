@@ -12,9 +12,9 @@ from collections import namedtuple
 import json
 from pathlib import Path
 
-import schema
+from load.schema import field_names, unescape_tnr, escape_tnr, build_row
 
-EscapedRow = namedtuple("EscapedRow", schema.field_names)
+EscapedRow = namedtuple("EscapedRow", field_names)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -35,13 +35,13 @@ def main():
 def process_as_tuples(filename):
     for row in get_tuples(filename):
         if row.event_entity == 'revision':
-            comment = schema.unescape_tnr(row.event_comment_escaped)
+            comment = unescape_tnr(row.event_comment_escaped)
             if comment and not row.event_user_is_bot_by_string:
                 human_comment = get_human_text(comment)
                 if human_comment:
                     data = {'timestamp': row.event_timestamp,
                             'comment': human_comment,
-                            'username': schema.unescape_tnr(row.event_user_text_escaped),
+                            'username': unescape_tnr(row.event_user_text_escaped),
                             }
                     print(json.dumps(data))
 
@@ -57,13 +57,13 @@ def process_as_rows(filename):
             if row.event_entity == 'revision' and row.event_comment and not row.event_user_is_bot_by:
                 summary = get_human_text(row.event_comment)
                 if summary:
-                    print(schema.escape_tnr(summary))
+                    print(escape_tnr(summary))
 
 
 def get_rows(filename):
     with bz2.open(filename, 'rt') as f:
         for line in f:
-            yield schema.build_row(line)
+            yield build_row(line)
 
 
 def get_human_text(text):
