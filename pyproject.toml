@@ -10,3 +10,4 @@ dependencies = [
 
 [project.scripts]
 extract-comments = "load.extract_comments:main"
+load-comments = "load.load_comments:main"
