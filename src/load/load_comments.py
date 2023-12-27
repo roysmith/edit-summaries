@@ -82,7 +82,7 @@ def parse_command_line():
     parser.add_argument('filename',
                         help='input file (must be .tsv.bz2)')
     parser.add_argument('--verbose', '-v',
-                        default=True,
+                        default=False,
                         action=argparse.BooleanOptionalAction,
                         help='enable verbose logging')
     parser.add_argument('--max-count',
