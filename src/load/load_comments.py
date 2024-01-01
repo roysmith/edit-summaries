@@ -29,6 +29,11 @@ def main():
                         #http_auth=('admin', 'foo'),
                         use_ssl=False)
     index_name = 'test-index'
+
+    if args.unsafe_drop_index:
+        client.indices.delete(index=index_name)
+        return
+
     indexer = BulkIndexer(client, index_name, args.batch_size)
 
     with bz2.open(args.filename, 'rt') as fin:
@@ -79,8 +84,6 @@ def parse_command_line():
 
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename',
-                        help='input file (must be .tsv.bz2)')
     parser.add_argument('--verbose', '-v',
                         default=False,
                         action=argparse.BooleanOptionalAction,
@@ -96,6 +99,13 @@ def parse_command_line():
                         type=int,
                         default=1000,
                         help='Number of insertions per bulk operation')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--unsafe-drop-index',
+                       action='store_true',
+                       help='delete index (and all the data contained in it!)')
+    group.add_argument('-f',
+                       '--filename',
+                       help='input file (must be .tsv.bz2)')
     return parser.parse_args()
 
 
