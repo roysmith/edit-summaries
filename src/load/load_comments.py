@@ -119,7 +119,6 @@ class BulkIndexer:
 
     def index(self, doc):
         self.actions.append({'_index': self.index_name,
-                             '_id': doc['id'],
                              '_source': doc,
                              })
         if len(self.actions) >= self.batch_size:
