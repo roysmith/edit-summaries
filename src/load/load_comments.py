@@ -13,7 +13,8 @@ from itertools import islice
 import json
 from pathlib import Path
 
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, helpers
+
 
 from load.schema import field_names, unescape_tnr, escape_tnr, build_row
 
@@ -24,20 +25,19 @@ host = 'opensearch:9200'
 
 def main():
     args = parse_command_line()
-    client = OpenSearch(hosts=[host], use_ssl=False)
+    client = OpenSearch(hosts=[host],
+                        #http_auth=('admin', 'foo'),
+                        use_ssl=False)
     index_name = 'test-index'
+    indexer = BulkIndexer(client, index_name, args.batch_size)
 
     with bz2.open(args.filename, 'rt') as fin:
         for document in islice(get_documents(fin), args.max_count):
             if not args.dry_run:
-                response = client.index(
-                    index=index_name,
-                    body=document,
-                    id=id,
-                    refresh=True,
-                )
+                response = indexer.index(document)
             if args.verbose:
                 print(f'{document=}')
+        indexer.flush()
 
 
 def get_documents(fin):
@@ -92,7 +92,34 @@ def parse_command_line():
                         default=True,
                         action=argparse.BooleanOptionalAction,
                         help='Process documents but do not insert into index')
+    parser.add_argument('--batch-size',
+                        type=int,
+                        default=1000,
+                        help='Number of insertions per bulk operation')
     return parser.parse_args()
+
+
+class BulkIndexer:
+    def __init__(self, client, index, batch_size):
+        self.client = client
+        self.index_name = index
+        self.batch_size = batch_size
+        self.actions = []
+
+
+    def index(self, doc):
+        self.actions.append({'_index': self.index_name,
+                             '_id': doc['id'],
+                             '_source': doc,
+                             })
+        if len(self.actions) >= self.batch_size:
+            self.flush()
+
+
+    def flush(self):
+        if self.actions:
+            helpers.bulk(self.client, self.actions)
+            self.actions = []
 
 
 if __name__ == '__main__':
