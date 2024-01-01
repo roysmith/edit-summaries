@@ -115,6 +115,8 @@ class BulkIndexer:
         self.index_name = index
         self.batch_size = batch_size
         self.actions = []
+        self.doc_count = 0
+        self.insert_count = 0
 
 
     def index(self, doc):
@@ -127,8 +129,11 @@ class BulkIndexer:
 
     def flush(self):
         if self.actions:
-            helpers.bulk(self.client, self.actions)
+            ok, _ = helpers.bulk(self.client, self.actions)
+            self.doc_count += len(self.actions)
+            self.insert_count += ok
             self.actions = []
+            print(f'{self.doc_count} docs, {self.insert_count} inserted')
 
 
 if __name__ == '__main__':
