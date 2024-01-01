@@ -39,7 +39,7 @@ def main():
     with bz2.open(args.filename, 'rt') as fin:
         for document in islice(get_documents(fin), args.max_count):
             if not args.dry_run:
-                response = indexer.index(document)
+                indexer.index(document)
             if args.verbose:
                 print(f'{document=}')
         indexer.flush()
