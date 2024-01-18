@@ -21,13 +21,12 @@ from load.schema import field_names, unescape_tnr, escape_tnr, build_row
 EscapedRow = namedtuple("EscapedRow", field_names)
 
 
-host = 'opensearch:9200'
-
 def main():
     args = parse_command_line()
-    client = OpenSearch(hosts=[host],
-                        #http_auth=('admin', 'foo'),
-                        use_ssl=False)
+    client = OpenSearch(hosts=[f'{args.host}:{args.port}'],
+                        http_auth=('admin', 'admin'),
+                        use_ssl=False,
+                        )
     index_name = 'test-index'
 
     if args.unsafe_drop_index:
@@ -88,6 +87,13 @@ def parse_command_line():
                         default=False,
                         action=argparse.BooleanOptionalAction,
                         help='enable verbose logging')
+    parser.add_argument('--host',
+                        required=True,
+                        help='hostname of opensearch server to connect to')
+    parser.add_argument('--port',
+                        type=int,
+                        default=9200,
+                        help='port number of opensearch server to connect to')
     parser.add_argument('--max-count',
                         type=int,
                         help='maximum number of records to load')
