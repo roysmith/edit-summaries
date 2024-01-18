@@ -6,7 +6,8 @@ from opensearchpy import OpenSearch
 from pprint import pprint
 
 
-host = 'opensearch:9200'
+host = 'opensearch2:9200'
+# auth = ('admin', 'spi999')
 auth = ('admin', 'admin')
 
 
@@ -23,7 +24,7 @@ def main():
 
     server = OpenSearch(hosts = [host],
                         use_ssl = False,
-                        # http_auth = auth,
+                        http_auth = auth,
                         )
 
     if args.info:
