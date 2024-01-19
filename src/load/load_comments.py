@@ -13,7 +13,7 @@ from itertools import islice
 import json
 from pathlib import Path
 
-from opensearchpy import OpenSearch, helpers
+import opensearchpy
 
 
 from load.schema import field_names, unescape_tnr, escape_tnr, build_row
@@ -23,25 +23,28 @@ EscapedRow = namedtuple("EscapedRow", field_names)
 
 def main():
     args = parse_command_line()
-    client = OpenSearch(hosts=[f'{args.host}:{args.port}'],
-                        http_auth=('admin', 'admin'),
-                        use_ssl=False,
-                        )
+    client = opensearchpy.OpenSearch(hosts=[f'{args.host}:{args.port}'],
+                                     http_auth=('admin', 'admin'),
+                                     use_ssl=False,
+                                     )
     index_name = 'test-index'
 
     if args.unsafe_drop_index:
-        client.indices.delete(index=index_name)
-        return
+        print('dropping index')
+        try:
+            client.indices.delete(index=index_name)
+        except opensearchpy.exceptions.NotFoundError:
+            print('index not found, ignoring')
 
-    indexer = BulkIndexer(client, index_name, args.batch_size)
-
-    with bz2.open(args.filename, 'rt') as fin:
-        for document in islice(get_documents(fin), args.max_count):
-            if not args.dry_run:
-                indexer.index(document)
-            if args.verbose:
-                print(f'{document=}')
-        indexer.flush()
+    if args.filename:
+        indexer = BulkIndexer(client, index_name, args.batch_size)
+        with bz2.open(args.filename, 'rt') as fin:
+            for document in islice(get_documents(fin), args.max_count):
+                if not args.dry_run:
+                    indexer.index(document)
+                if args.verbose:
+                    print(f'{document=}')
+            indexer.flush()
 
 
 def get_documents(fin):
@@ -105,11 +108,12 @@ def parse_command_line():
                         type=int,
                         default=1000,
                         help='Number of insertions per bulk operation')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--unsafe-drop-index',
+    parser.add_argument('--unsafe-drop-index',
                        action='store_true',
-                       help='delete index (and all the data contained in it!)')
-    group.add_argument('-f',
+                       help=
+                        '''delete index (and all the data contained in it!).  If specified
+                        with --filename, index is dropped first, then new data loaded.''')
+    parser.add_argument('-f',
                        '--filename',
                        help='input file (must be .tsv.bz2)')
     return parser.parse_args()
@@ -135,7 +139,7 @@ class BulkIndexer:
 
     def flush(self):
         if self.actions:
-            ok, _ = helpers.bulk(self.client, self.actions)
+            ok, _ = opensearchpy.helpers.bulk(self.client, self.actions)
             self.doc_count += len(self.actions)
             self.insert_count += ok
             self.actions = []
