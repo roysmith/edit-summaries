@@ -9,9 +9,12 @@ Extract edit comments and load into opensearch.
 import argparse
 import bz2
 from collections import namedtuple
+from configparser import ConfigParser
 from itertools import islice
 import json
+import os
 from pathlib import Path
+from pprint import pprint
 
 import opensearchpy
 
@@ -23,11 +26,13 @@ EscapedRow = namedtuple("EscapedRow", field_names)
 
 def main():
     args = parse_command_line()
+    config = read_config()
+    auth = (config['auth']['user'], config['auth']['password'])
     client = opensearchpy.OpenSearch(hosts=[f'{args.host}:{args.port}'],
-                                     http_auth=('admin', 'admin'),
+                                     http_auth=auth,
                                      use_ssl=False,
                                      )
-    index_name = 'test-index'
+    index_name = 'edit-comment'
 
     if args.unsafe_drop_index:
         print('dropping index')
@@ -37,15 +42,17 @@ def main():
             print('index not found, ignoring')
 
     if args.filename:
-        indexer = BulkIndexer(client, index_name, args.batch_size)
-        with bz2.open(args.filename, 'rt') as fin:
-            for document in islice(get_documents(fin), args.max_count):
-                if not args.dry_run:
-                    indexer.index(document)
-                if args.verbose:
-                    print(f'{document=}')
-            indexer.flush()
-
+        try:
+            indexer = BulkIndexer(client, index_name, args.batch_size)
+            with bz2.open(args.filename, 'rt') as fin:
+                for document in islice(get_documents(fin), args.max_count):
+                    if not args.dry_run:
+                        indexer.index(document)
+                    if args.verbose:
+                        print(f'{document=}')
+                indexer.flush()
+        except opensearchpy.exceptions.OpenSearchException as ex:
+            pprint(ex.errors)
 
 def get_documents(fin):
     """Iterate over documents which should be inserted into the index.
@@ -117,6 +124,17 @@ def parse_command_line():
                        '--filename',
                        help='input file (must be .tsv.bz2)')
     return parser.parse_args()
+
+
+def read_config():
+    config_path = Path(os.environ['OPENSEARCH_CONFIG'])
+    mode = config_path.stat().st_mode
+    if mode & 0o44:
+        raise RuntimeError(f'Config file ({config_path}) has unsafe mode {oct(mode)}: may not be group or world readable')
+
+    config = ConfigParser()
+    config.read(config_path)
+    return config
 
 
 class BulkIndexer:
