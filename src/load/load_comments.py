@@ -32,6 +32,7 @@ def main():
                                      http_auth=auth,
                                      use_ssl=True,
                                      verify_certs=False,
+                                     ssl_show_warn=False,
                                      )
     index_name = 'edit-comment'
 
