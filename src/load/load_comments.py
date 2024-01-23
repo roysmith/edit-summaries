@@ -30,7 +30,8 @@ def main():
     auth = (config['auth']['user'], config['auth']['password'])
     client = opensearchpy.OpenSearch(hosts=[f'{args.host}:{args.port}'],
                                      http_auth=auth,
-                                     use_ssl=False,
+                                     use_ssl=True,
+                                     verify_certs=False,
                                      )
     index_name = 'edit-comment'
 
