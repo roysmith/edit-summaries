@@ -34,7 +34,7 @@ def main():
                                      verify_certs=False,
                                      ssl_show_warn=False,
                                      )
-    index_name = 'edit-comment'
+    index_name = args.index_name
 
     if args.unsafe_drop_index:
         print('dropping index')
@@ -125,6 +125,9 @@ def parse_command_line():
     parser.add_argument('-f',
                        '--filename',
                        help='input file (must be .tsv.bz2)')
+    parser.add_argument('--index-name',
+                        default='edit-comment',
+                        help='index name')
     return parser.parse_args()
 
 
